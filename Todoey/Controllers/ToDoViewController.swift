@@ -9,7 +9,7 @@
 import UIKit
 import RealmSwift
 
-class ToDoViewController: UITableViewController {
+class ToDoViewController: SwipeTableViewController {
     
     let realm = try! Realm()
     
@@ -30,10 +30,7 @@ class ToDoViewController: UITableViewController {
         
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
-        
-//        if let items = defaults.array(forKey: "ToDoListArray") as? [Item] {
-//            itemArray = items
-//        }
+        tableView.rowHeight = 80.0
         
     }
 
@@ -45,24 +42,14 @@ class ToDoViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
-        if let item = todoItems?[indexPath.row] {
-            
-            cell.textLabel?.text = item.title
-            
-            //Ternary operator ==>
-            //value = condition ? valueIfTrue : valueIfFalse
-            
-            cell.accessoryType = item.done ? .checkmark : .none
-            
-        } else {
-            
-            cell.textLabel?.text = "No items added"
-            
-        }
+        cell.textLabel?.text = todoItems?[indexPath.row].title ?? "No Items Added"
+        
+        cell.accessoryType = (todoItems?[indexPath.row].done)! ? .checkmark : .none
         
         return cell
+        
     }
     
     //Mark:- TableView Delegate Methods
@@ -93,17 +80,6 @@ class ToDoViewController: UITableViewController {
         
         
     }
-    
-//    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-//
-//        context.delete(itemArray[indexPath.row])
-//
-//        itemArray.remove(at: indexPath.row)
-//
-//        return nil
-//
-//    }
-    
     
     //Mark:- Add new items section
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
@@ -165,9 +141,33 @@ class ToDoViewController: UITableViewController {
         tableView.reloadData()
 
     }
-
-
+    
+    override func updateModel(at indexPath: IndexPath) {
+        
+        if let itemForDeletion = self.todoItems?[indexPath.row] {
+            
+            do {
+              
+                try self.realm.write {
+              
+                    self.realm.delete(itemForDeletion)
+               
+                }
+                
+            } catch {
+                
+                print("Error deleting item, \(error)")
+                    
+            }
+           
+        }
+            
+            
+    }
+        
+        
 }
+
 
 
 ////MARK: - Search Bar Methods
